@@ -1,0 +1,47 @@
+[package]
+name = "s3cli"
+version = "0.1.0"
+edition = "2021"
+authors = ["s3cli Team <team@s3cli.com>"]
+description = "CLI-first S3 storage for developers and AI agents"
+license = "MIT OR Apache-2.0"
+rust-version = "1.75"
+repository = "https://github.com/s3cli/s3cli"
+keywords = ["s3", "cli", "storage", "cloud", "r2"]
+categories = ["command-line-utilities", "storage"]
+
+[dependencies]
+clap = { version = "4.5", features = ["derive", "usage", "help"] }
+clap_complete = "4.5"
+tokio = { version = "1.35", features = ["full"] }
+async-trait = "0.1"
+aws-config = "1.1"
+aws-sdk-s3 = "1.28"
+figment = { version = "0.10", features = ["toml", "env"] }
+serde = { version = "1.0", features = ["derive"] }
+toml = "0.8"
+anyhow = "1.0"
+thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+uuid = { version = "1.0", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+dirs = "5.0"
+indicatif = "0.17"
+bytesize = "1.0"
+mime_guess = "2.0"
+
+[dev-dependencies]
+tempfile = "3.8"
+mockall = "0.12"
+tokio-test = "0.4"
+
+[features]
+default = []
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+opt-level = "z"
