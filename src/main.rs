@@ -1,3 +1,7 @@
+mod config;
+mod storage;
+mod models;
+
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
