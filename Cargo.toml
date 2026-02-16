@@ -28,6 +28,7 @@ uuid = { version = "1.0", features = ["v4"] }
 chrono = { version = "0.4", features = ["serde"] }
 dirs = "5.0"
 indicatif = "0.17"
+bytes = "1.0"
 bytesize = "1.0"
 mime_guess = "2.0"
 
