@@ -15,8 +15,7 @@ clap = { version = "4.5", features = ["derive", "usage", "help"] }
 clap_complete = "4.5"
 tokio = { version = "1.35", features = ["full"] }
 async-trait = "0.1"
-aws-config = "1.1"
-aws-sdk-s3 = "1.28"
+reqwest = { version = "0.12", features = ["json", "stream"] }
 figment = { version = "0.10", features = ["toml", "env"] }
 serde = { version = "1.0", features = ["derive"] }
 toml = "0.8"
@@ -31,6 +30,10 @@ indicatif = "0.17"
 bytes = "1.0"
 bytesize = "1.0"
 mime_guess = "2.0"
+hmac = "0.12"
+sha2 = "0.10"
+hex = "0.4"
+base64 = "0.22"
 
 [dev-dependencies]
 tempfile = "3.8"

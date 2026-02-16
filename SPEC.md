@@ -555,6 +555,117 @@ Error: Object not found
 - Multipart upload resume
 - Encryption (client-side)
 - Webhooks
+- **Plugin System** (see Section 11)
+
+---
+
+## 10. Plugin System
+
+### 10.1 Architecture
+
+The plugin system allows extending s3cli with custom functionality:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                      s3cli Core                         │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐   │
+│  │   Commands   │  │   Storage   │  │  Config     │   │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘   │
+│         │                │                │           │
+│         └────────────────┼────────────────┘           │
+│                          │                             │
+│                   ┌──────▼──────┐                      │
+│                   │  Plugin API │                      │
+│                   └──────┬──────┘                      │
+└──────────────────────────┼──────────────────────────────┘
+                           │
+        ┌─────────────────┼─────────────────┐
+        │                 │                 │
+   ┌────▼────┐      ┌────▼────┐      ┌────▼────┐
+   │  Shell   │      │  OS     │      │ Custom  │
+   │Extension │      │Integration│     │Plugins  │
+   └──────────┘      └──────────┘      └─────────┘
+```
+
+### 10.2 Plugin Types
+
+| Plugin Type | Description | Examples |
+|------------|-------------|----------|
+| **Commands** | Add new CLI commands | `s3cli mycommand` |
+| **Providers** | Custom storage backends | S3-compatible services |
+| **Hooks** | Pre/post command hooks | Logging, validation |
+| **Formatters** | Custom output formats | JSON, YAML, custom table |
+| **OS Integration** | Context menu, file associations | macOS Finder, Windows Explorer |
+
+### 10.3 OS Context Menu Integration
+
+For the context menu idea you mentioned:
+
+```yaml
+# Example: macOS Finder extension (via FinderSync)
+# ~/.s3cli/plugins/finder-integration.yaml
+enabled: true
+actions:
+  - name: "Upload to S3"
+    command: "push"
+    icon: "📤"
+  - name: "Get S3 Link"
+    command: "share"
+    icon: "🔗"
+  - name: "Copy to Clipboard"
+    command: "share --clipboard"
+    icon: "📋"
+
+# Windows Explorer shell extension
+# ~/.s3cli/plugins/shell-integration.yaml
+enabled: true
+context_menu:
+  files:
+    - "Upload to S3"
+    - "Generate Share Link"
+  folders:
+    - "Upload Folder to S3"
+```
+
+### 10.4 Plugin API
+
+```rust
+// Plugin trait for custom plugins
+pub trait Plugin: Send + Sync {
+    fn name(&self) -> &str;
+    fn version(&self) -> &str;
+    fn execute(&self, ctx: &PluginContext) -> Result<PluginResult, PluginError>;
+}
+
+// Example custom plugin
+pub struct MyPlugin;
+impl Plugin for MyPlugin {
+    fn name(&self) -> &str { "my-plugin" }
+    fn version(&self) -> &str { "0.1.0" }
+    fn execute(&self, ctx: &PluginContext) -> Result<PluginResult, PluginError> {
+        // Custom logic
+        Ok(PluginResult::success("Done"))
+    }
+}
+```
+
+### 10.5 Visual Progress
+
+Plugins can leverage the progress API:
+
+```rust
+pub trait ProgressReporter: Send + Sync {
+    fn set_total(&self, total: u64);
+    fn set_progress(&self, current: u64);
+    fn set_message(&self, message: &str);
+    fn finish(&self);
+}
+
+// Built-in progress styles:
+// - Terminal progress bars (indicatif)
+// - GUI progress (for desktop integration)
+// - WebSocket progress (for web dashboards)
+```
 
 ---
 

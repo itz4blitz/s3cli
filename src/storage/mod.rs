@@ -1,6 +1,10 @@
+mod s3;
+
 use async_trait::async_trait;
 use std::io::Read;
 use crate::models::{FileEntry, FileMetadata, Pagination};
+
+pub use s3::S3Storage;
 
 #[async_trait]
 pub trait Storage: Send + Sync {
