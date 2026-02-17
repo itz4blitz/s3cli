@@ -152,6 +152,12 @@ pub enum ConfigError {
     MissingEndpoint(Provider),
 }
 
+impl From<std::io::Error> for ConfigError {
+    fn from(err: std::io::Error) -> Self {
+        ConfigError::IoError(err.to_string())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

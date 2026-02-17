@@ -1,8 +1,10 @@
 mod config;
 mod storage;
 mod models;
+mod commands;
 
 use clap::{Parser, Subcommand};
+use tokio::runtime::Runtime;
 
 #[derive(Parser)]
 #[command(name = "s3cli")]
@@ -140,18 +142,104 @@ pub enum ConfigCommands {
 
 fn main() {
     let cli = Cli::parse();
+    let runtime = Runtime::new().expect("Failed to create runtime");
 
+    if let Err(e) = run(runtime, cli) {
+        eprintln!("Error: {}", e);
+        std::process::exit(1);
+    }
+}
+
+fn run(runtime: Runtime, cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
     match cli.command {
-        Commands::Push { .. } => println!("push command"),
-        Commands::Pull { .. } => println!("pull command"),
-        Commands::Ls { .. } => println!("ls command"),
-        Commands::Rm { .. } => println!("rm command"),
-        Commands::Share { .. } => println!("share command"),
-        Commands::Info { .. } => println!("info command"),
-        Commands::Copy { .. } => println!("copy command"),
-        Commands::Move { .. } => println!("move command"),
-        Commands::Cat { .. } => println!("cat command"),
-        Commands::Config { .. } => println!("config command"),
+        Commands::Push { file, public, expires, content_type } => {
+            runtime.block_on(async {
+                let config = load_config()?;
+                commands::push(&config, file, public, expires, content_type).await
+            })?;
+        }
+        Commands::Pull { id, output, force } => {
+            runtime.block_on(async {
+                let config = load_config()?;
+                commands::pull(&config, id, output, force).await
+            })?;
+        }
+        Commands::Ls { pattern, long, limit } => {
+            runtime.block_on(async {
+                let config = load_config()?;
+                commands::list_files(&config, pattern, long, limit).await
+            })?;
+        }
+        Commands::Rm { id } => {
+            runtime.block_on(async {
+                let config = load_config()?;
+                commands::remove_file(&config, id).await
+            })?;
+        }
+        Commands::Share { id, expires, download } => {
+            runtime.block_on(async {
+                let config = load_config()?;
+                commands::share_file(&config, id, expires, download).await
+            })?;
+        }
+        Commands::Info { id } => {
+            runtime.block_on(async {
+                let config = load_config()?;
+                commands::file_info(&config, id).await
+            })?;
+        }
+        Commands::Copy { source, dest } => {
+            runtime.block_on(async {
+                let config = load_config()?;
+                commands::copy_file(&config, source, dest).await
+            })?;
+        }
+        Commands::Move { source, dest } => {
+            runtime.block_on(async {
+                let config = load_config()?;
+                commands::move_file(&config, source, dest).await
+            })?;
+        }
+        Commands::Cat { id } => {
+            runtime.block_on(async {
+                let config = load_config()?;
+                commands::cat_file(&config, id).await
+            })?;
+        }
+        Commands::Config { command } => {
+            match command {
+                ConfigCommands::Get { key } => {
+                    commands::config_get(key)?;
+                }
+                ConfigCommands::Set { key, value } => {
+                    commands::config_set(key, value)?;
+                }
+                ConfigCommands::List => {
+                    commands::config_list()?;
+                }
+                ConfigCommands::Init => {
+                    commands::config_init()?;
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+fn load_config() -> Result<config::Config, config::ConfigError> {
+    match config::Config::load_config_file()? {
+        Some(config) => {
+            let mut config = config;
+            if let Err(e) = config.validate() {
+                eprintln!("Warning: {}", e);
+            }
+            Ok(config)
+        }
+        None => {
+            let config = config::Config::default();
+            config.validate()?;
+            Ok(config)
+        }
     }
 }
 
@@ -217,6 +305,52 @@ mod tests {
                 }
             }
             _ => panic!("Expected Config command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parse_copy() {
+        let cli = Cli::parse_from(["s3cli", "copy", "source.txt", "dest.txt"]);
+        match cli.command {
+            Commands::Copy { source, dest } => {
+                assert_eq!(source, "source.txt");
+                assert_eq!(dest, "dest.txt");
+            }
+            _ => panic!("Expected Copy command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parse_move() {
+        let cli = Cli::parse_from(["s3cli", "move", "old.txt", "new.txt"]);
+        match cli.command {
+            Commands::Move { source, dest } => {
+                assert_eq!(source, "old.txt");
+                assert_eq!(dest, "new.txt");
+            }
+            _ => panic!("Expected Move command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parse_cat() {
+        let cli = Cli::parse_from(["s3cli", "cat", "abc123"]);
+        match cli.command {
+            Commands::Cat { id } => {
+                assert_eq!(id, "abc123");
+            }
+            _ => panic!("Expected Cat command"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parse_rm() {
+        let cli = Cli::parse_from(["s3cli", "rm", "abc123"]);
+        match cli.command {
+            Commands::Rm { id } => {
+                assert_eq!(id, "abc123");
+            }
+            _ => panic!("Expected Rm command"),
         }
     }
 }
