@@ -10,6 +10,7 @@ pub async fn share_file(
     id: String,
     expires: String,
     download: bool,
+    copy_clipboard: bool,
 ) -> CmdResult<()> {
     let storage = get_storage(config).await?;
 
@@ -21,7 +22,20 @@ pub async fn share_file(
         url.push_str("&ResponseContentDisposition=attachment");
     }
 
-    println!("{}", url);
+    if copy_clipboard {
+        copy_to_clipboard(&url)?;
+        println!("Copied to clipboard!");
+    } else {
+        println!("{}", url);
+    }
+    Ok(())
+}
+
+fn copy_to_clipboard(text: &str) -> CmdResult<()> {
+    let mut clipboard = arboard::Clipboard::new()
+        .map_err(|e| super::CommandError::Io(format!("Clipboard error: {}", e)))?;
+    clipboard.set_text(text)
+        .map_err(|e| super::CommandError::Io(format!("Clipboard error: {}", e)))?;
     Ok(())
 }
 

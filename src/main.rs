@@ -81,6 +81,10 @@ pub enum Commands {
         /// Force download (Content-Disposition)
         #[arg(short, long)]
         download: bool,
+
+        /// Copy URL to clipboard
+        #[arg(short, long)]
+        copy: bool,
     },
 
     /// Show file metadata
@@ -176,10 +180,10 @@ fn run(runtime: Runtime, cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
                 commands::remove_file(&config, id).await
             })?;
         }
-        Commands::Share { id, expires, download } => {
+        Commands::Share { id, expires, download, copy } => {
             runtime.block_on(async {
                 let config = load_config()?;
-                commands::share_file(&config, id, expires, download).await
+                commands::share_file(&config, id, expires, download, copy).await
             })?;
         }
         Commands::Info { id } => {
