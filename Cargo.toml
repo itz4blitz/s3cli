@@ -1,6 +1,6 @@
 [package]
 name = "s3cli"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["s3cli Team <team@s3cli.com>"]
 description = "CLI-first S3 storage for developers and AI agents"
