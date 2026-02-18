@@ -298,7 +298,7 @@ impl crate::storage::Storage for S3Storage {
         
         let path = "/";
         
-        let response = self.request("GET", path, &query, None, None).await?;
+        let response = self.request("GET", &path, &query, None, None).await?;
         
         if !response.status().is_success() {
             return Err(StorageError::ProviderError(format!(
