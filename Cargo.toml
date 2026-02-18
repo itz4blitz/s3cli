@@ -6,7 +6,7 @@ authors = ["s3cli Team <team@s3cli.com>"]
 description = "CLI-first S3 storage for developers and AI agents"
 license = "MIT OR Apache-2.0"
 rust-version = "1.75"
-repository = "https://github.com/s3cli/s3cli"
+repository = "https://github.com/itz4blitz/s3cli"
 keywords = ["s3", "cli", "storage", "cloud", "r2"]
 categories = ["command-line-utilities", "storage"]
 
